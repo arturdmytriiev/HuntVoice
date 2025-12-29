@@ -19,6 +19,7 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
 # Virtual Environment
 venv/
@@ -27,6 +28,7 @@ ENV/
 .venv
 
 # IDEs
+# IDE
 .vscode/
 .idea/
 *.swp
@@ -38,6 +40,9 @@ ENV/
 .env
 .env.local
 .env.*.local
+# Environment Variables
+.env
+.env.local
 
 # Database
 *.db
@@ -46,6 +51,9 @@ ENV/
 
 # Alembic
 db/migrations/versions/*.pyc
+# Logs
+*.log
+logs/
 
 # Testing
 .pytest_cache/
@@ -60,3 +68,5 @@ logs/
 # Distribution
 *.tar.gz
 *.zip
+# Twilio
+.twilio-cli/
