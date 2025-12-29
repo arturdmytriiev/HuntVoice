@@ -1,0 +1,53 @@
+{
+  "restaurant": "Hunt Restaurant",
+  "items": [
+    {
+      "name": "Grilled Salmon",
+      "description": "Fresh Atlantic salmon with lemon butter sauce, served with seasonal vegetables",
+      "price": 24.99,
+      "category": "Entrees"
+    },
+    {
+      "name": "Ribeye Steak",
+      "description": "12oz ribeye steak cooked to perfection, served with mashed potatoes",
+      "price": 32.99,
+      "category": "Entrees"
+    },
+    {
+      "name": "Caesar Salad",
+      "description": "Crisp romaine lettuce with parmesan cheese and Caesar dressing",
+      "price": 12.99,
+      "category": "Salads"
+    },
+    {
+      "name": "Chicken Alfredo",
+      "description": "Fettuccine pasta with grilled chicken in creamy alfredo sauce",
+      "price": 18.99,
+      "category": "Pasta"
+    },
+    {
+      "name": "Margherita Pizza",
+      "description": "Classic pizza with fresh mozzarella, tomatoes, and basil",
+      "price": 15.99,
+      "category": "Pizza"
+    },
+    {
+      "name": "Lobster Bisque",
+      "description": "Rich and creamy lobster soup with a hint of sherry",
+      "price": 10.99,
+      "category": "Appetizers"
+    },
+    {
+      "name": "Chocolate Lava Cake",
+      "description": "Warm chocolate cake with a molten center, served with vanilla ice cream",
+      "price": 8.99,
+      "category": "Desserts"
+    },
+    {
+      "name": "Tiramisu",
+      "description": "Classic Italian dessert with layers of coffee-soaked ladyfingers and mascarpone",
+      "price": 7.99,
+      "category": "Desserts"
+    }
+  ]
+}
