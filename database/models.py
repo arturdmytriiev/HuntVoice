@@ -34,12 +34,12 @@ class CallLog(Base):
     from_number = Column(String(50), nullable=False)
     to_number = Column(String(50), nullable=False)
     status = Column(Enum(CallStatus), default=CallStatus.INITIATED, nullable=False)
-    started_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    started_at = Column(DateTime, default=datetime.now(), nullable=False)
     ended_at = Column(DateTime, nullable=True)
     duration_seconds = Column(Integer, nullable=True)
     transcript = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=datetime.now(), nullable=False)
+    updated_at = Column(DateTime, default=datetime.now(), onupdate=datetime.now(), nullable=False)
 
     # Relationships
     conversation_state = relationship("ConversationState", back_populates="call_log", uselist=False)
@@ -54,8 +54,8 @@ class ConversationState(Base):
     call_sid = Column(String(255), ForeignKey("call_logs.call_sid"), unique=True, nullable=False, index=True)
     current_step = Column(String(100), default="greeting", nullable=False)
     state_data = Column(Text, nullable=True)  # JSON string of state data
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=datetime.now(), nullable=False)
+    updated_at = Column(DateTime, default=datetime.now(), onupdate=datetime.now(), nullable=False)
 
     # Relationships
     call_log = relationship("CallLog", back_populates="conversation_state")
@@ -73,8 +73,8 @@ class Reservation(Base):
     reservation_date = Column(DateTime, nullable=False)
     special_requests = Column(Text, nullable=True)
     status = Column(Enum(ReservationStatus), default=ReservationStatus.PENDING, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=datetime.now(), nullable=False)
+    updated_at = Column(DateTime, default=datetime.now(), onupdate=datetime.now(), nullable=False)
 
     # Relationships
     call_log = relationship("CallLog", back_populates="reservation")
