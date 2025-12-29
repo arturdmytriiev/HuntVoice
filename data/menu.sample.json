@@ -1,0 +1,225 @@
+{
+  "categories": {
+    "appetizers": {
+      "name": "Закуски",
+      "name_en": "Appetizers",
+      "items": [
+        {
+          "id": "app_001",
+          "name": "Брускетта с томатами",
+          "name_en": "Bruschetta with Tomatoes",
+          "description": "Хрустящий хлеб с сочными томатами, базиликом и оливковым маслом",
+          "description_en": "Crispy bread with juicy tomatoes, basil and olive oil",
+          "price": 8.50,
+          "currency": "EUR",
+          "allergens": ["gluten", "garlic"],
+          "dietary": ["vegetarian"],
+          "ingredients": ["bread", "tomatoes", "basil", "olive oil", "garlic"],
+          "available": true,
+          "preparation_time_minutes": 10
+        },
+        {
+          "id": "app_002",
+          "name": "Тартар из лосося",
+          "name_en": "Salmon Tartare",
+          "description": "Свежий лосось с авокадо, каперсами и лимонной заправкой",
+          "description_en": "Fresh salmon with avocado, capers and lemon dressing",
+          "price": 14.90,
+          "currency": "EUR",
+          "allergens": ["fish"],
+          "dietary": ["gluten-free"],
+          "ingredients": ["salmon", "avocado", "capers", "lemon", "olive oil"],
+          "available": true,
+          "preparation_time_minutes": 15
+        },
+        {
+          "id": "app_003",
+          "name": "Сырная тарелка",
+          "name_en": "Cheese Platter",
+          "description": "Ассорти из пяти видов сыра с медом и орехами",
+          "description_en": "Selection of five cheeses with honey and nuts",
+          "price": 16.50,
+          "currency": "EUR",
+          "allergens": ["dairy", "nuts"],
+          "dietary": ["vegetarian"],
+          "ingredients": ["cheese", "honey", "walnuts", "grapes"],
+          "available": true,
+          "preparation_time_minutes": 5
+        }
+      ]
+    },
+    "main_courses": {
+      "name": "Основные блюда",
+      "name_en": "Main Courses",
+      "items": [
+        {
+          "id": "main_001",
+          "name": "Стейк рибай",
+          "name_en": "Ribeye Steak",
+          "description": "Мраморный стейк 300г с овощами гриль и картофельным пюре",
+          "description_en": "Marbled 300g steak with grilled vegetables and mashed potatoes",
+          "price": 32.90,
+          "currency": "EUR",
+          "allergens": ["dairy"],
+          "dietary": ["gluten-free"],
+          "ingredients": ["beef", "potatoes", "butter", "vegetables", "herbs"],
+          "available": true,
+          "preparation_time_minutes": 25,
+          "spicy_level": 0
+        },
+        {
+          "id": "main_002",
+          "name": "Паста карбонара",
+          "name_en": "Pasta Carbonara",
+          "description": "Классическая паста с беконом, яйцом и пармезаном",
+          "description_en": "Classic pasta with bacon, egg and parmesan",
+          "price": 13.90,
+          "currency": "EUR",
+          "allergens": ["gluten", "dairy", "eggs"],
+          "dietary": [],
+          "ingredients": ["pasta", "bacon", "eggs", "parmesan", "black pepper"],
+          "available": true,
+          "preparation_time_minutes": 15
+        },
+        {
+          "id": "main_003",
+          "name": "Лосось на гриле",
+          "name_en": "Grilled Salmon",
+          "description": "Филе лосося с лимонным соусом и рисом басмати",
+          "description_en": "Salmon fillet with lemon sauce and basmati rice",
+          "price": 21.50,
+          "currency": "EUR",
+          "allergens": ["fish"],
+          "dietary": ["gluten-free"],
+          "ingredients": ["salmon", "rice", "lemon", "butter", "dill"],
+          "available": true,
+          "preparation_time_minutes": 20
+        },
+        {
+          "id": "main_004",
+          "name": "Ризотто с грибами",
+          "name_en": "Mushroom Risotto",
+          "description": "Кремовое ризотто с белыми грибами и трюфельным маслом",
+          "description_en": "Creamy risotto with porcini mushrooms and truffle oil",
+          "price": 17.90,
+          "currency": "EUR",
+          "allergens": ["dairy"],
+          "dietary": ["vegetarian", "gluten-free"],
+          "ingredients": ["arborio rice", "mushrooms", "parmesan", "white wine", "truffle oil"],
+          "available": true,
+          "preparation_time_minutes": 30
+        },
+        {
+          "id": "main_005",
+          "name": "Куриная грудка с овощами",
+          "name_en": "Chicken Breast with Vegetables",
+          "description": "Сочная куриная грудка с сезонными овощами и соусом песто",
+          "description_en": "Juicy chicken breast with seasonal vegetables and pesto sauce",
+          "price": 15.90,
+          "currency": "EUR",
+          "allergens": ["dairy", "nuts"],
+          "dietary": ["gluten-free"],
+          "ingredients": ["chicken", "vegetables", "basil", "pine nuts", "parmesan"],
+          "available": true,
+          "preparation_time_minutes": 20
+        }
+      ]
+    },
+    "desserts": {
+      "name": "Десерты",
+      "name_en": "Desserts",
+      "items": [
+        {
+          "id": "des_001",
+          "name": "Тирамису",
+          "name_en": "Tiramisu",
+          "description": "Классический итальянский десерт с маскарпоне и кофе",
+          "description_en": "Classic Italian dessert with mascarpone and coffee",
+          "price": 7.50,
+          "currency": "EUR",
+          "allergens": ["gluten", "dairy", "eggs"],
+          "dietary": [],
+          "ingredients": ["mascarpone", "ladyfingers", "coffee", "cocoa", "eggs"],
+          "available": true,
+          "preparation_time_minutes": 5
+        },
+        {
+          "id": "des_002",
+          "name": "Шоколадный фондан",
+          "name_en": "Chocolate Fondant",
+          "description": "Горячий шоколадный десерт с жидкой начинкой и мороженым",
+          "description_en": "Hot chocolate dessert with liquid center and ice cream",
+          "price": 8.90,
+          "currency": "EUR",
+          "allergens": ["gluten", "dairy", "eggs"],
+          "dietary": [],
+          "ingredients": ["chocolate", "butter", "eggs", "flour", "vanilla ice cream"],
+          "available": true,
+          "preparation_time_minutes": 12
+        },
+        {
+          "id": "des_003",
+          "name": "Панна-котта с ягодами",
+          "name_en": "Panna Cotta with Berries",
+          "description": "Нежный сливочный десерт со свежими ягодами",
+          "description_en": "Delicate cream dessert with fresh berries",
+          "price": 6.90,
+          "currency": "EUR",
+          "allergens": ["dairy"],
+          "dietary": ["gluten-free", "vegetarian"],
+          "ingredients": ["cream", "sugar", "gelatin", "vanilla", "berries"],
+          "available": true,
+          "preparation_time_minutes": 5
+        }
+      ]
+    },
+    "beverages": {
+      "name": "Напитки",
+      "name_en": "Beverages",
+      "items": [
+        {
+          "id": "bev_001",
+          "name": "Эспрессо",
+          "name_en": "Espresso",
+          "description": "Двойной эспрессо из зерен арабики",
+          "description_en": "Double espresso from arabica beans",
+          "price": 2.50,
+          "currency": "EUR",
+          "allergens": [],
+          "dietary": ["vegan", "gluten-free"],
+          "ingredients": ["coffee"],
+          "available": true,
+          "preparation_time_minutes": 3
+        },
+        {
+          "id": "bev_002",
+          "name": "Свежевыжатый апельсиновый сок",
+          "name_en": "Freshly Squeezed Orange Juice",
+          "description": "100% натуральный апельсиновый сок",
+          "description_en": "100% natural orange juice",
+          "price": 4.50,
+          "currency": "EUR",
+          "allergens": [],
+          "dietary": ["vegan", "gluten-free"],
+          "ingredients": ["oranges"],
+          "available": true,
+          "preparation_time_minutes": 5
+        },
+        {
+          "id": "bev_003",
+          "name": "Домашний лимонад",
+          "name_en": "Homemade Lemonade",
+          "description": "Освежающий лимонад с мятой",
+          "description_en": "Refreshing lemonade with mint",
+          "price": 3.90,
+          "currency": "EUR",
+          "allergens": [],
+          "dietary": ["vegan", "gluten-free"],
+          "ingredients": ["lemon", "sugar", "water", "mint"],
+          "available": true,
+          "preparation_time_minutes": 5
+        }
+      ]
+    }
+  }
+}
