@@ -4,8 +4,8 @@ Handles reservation creation, cancellation, conflict checking, and audit logging
 """
 import json
 import logging
-from datetime import datetime, timedelta
-from typing import List, Dict, Optional, Any, Tuple
+from datetime import datetime, date, time, timedelta
+from typing import List, Dict, Optional, Any, Tuple, Set
 from pathlib import Path
 from dataclasses import dataclass, asdict
 from enum import Enum
@@ -15,6 +15,21 @@ from core.utils_datetime import (
     is_valid_reservation_time,
     format_datetime_russian,
     TIMEZONE
+)
+from core.restaurant_config import (
+    RestaurantConfig,
+    get_restaurant_config,
+)
+from services.reservation_validation import (
+    ReservationInput,
+    ValidatedReservation,
+    ValidationResult,
+    ReservationValidationService,
+    get_validation_service,
+    normalize_phone_to_e164,
+    sanitize_name,
+    sanitize_notes,
+    generate_reservation_hash,
 )
 
 
@@ -48,6 +63,11 @@ class Reservation:
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     table_number: Optional[int] = None
+    phone_raw: Optional[str] = None  # Original phone input before normalization
+    duration_minutes: int = 90  # Reservation duration
+    idempotency_hash: Optional[str] = None  # For duplicate detection
+    requires_confirmation: bool = False  # If manual confirmation is needed
+    escalation_reason: Optional[str] = None  # Reason for escalation if any
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary with datetime serialization."""
@@ -78,18 +98,23 @@ class Reservation:
 class ReservationService:
     """Service for managing restaurant reservations."""
 
-    # Restaurant capacity settings
+    # Restaurant capacity settings (legacy - now in RestaurantConfig)
     MAX_PARTY_SIZE = 12
     TABLES_AVAILABLE = 20
     MAX_RESERVATIONS_PER_SLOT = 15  # Max concurrent reservations per time slot
     SLOT_DURATION_MINUTES = 120  # Standard reservation duration
 
-    def __init__(self, data_dir: Optional[str] = None):
+    def __init__(
+        self,
+        data_dir: Optional[str] = None,
+        config: Optional[RestaurantConfig] = None
+    ):
         """
         Initialize ReservationService.
 
         Args:
             data_dir: Directory for storing reservation data
+            config: Restaurant configuration (uses default if not provided)
         """
         if data_dir is None:
             # Default to data/ directory relative to project root
@@ -102,8 +127,20 @@ class ReservationService:
         self.reservations_file = self.data_dir / "reservations.json"
         self.audit_log_file = self.data_dir / "audit_log.json"
 
+        # Restaurant configuration
+        self.config = config or get_restaurant_config()
+
+        # Validation service
+        self._validation_service = get_validation_service()
+
+        # Idempotency tracking
+        self._reservation_hashes: Set[str] = set()
+
         self.reservations: Dict[str, Reservation] = {}
         self._load_reservations()
+
+        # Register existing reservations for idempotency
+        self._register_existing_reservations()
 
     def _load_reservations(self) -> None:
         """Load reservations from file."""
@@ -121,6 +158,26 @@ class ReservationService:
                 self.reservations = {}
         else:
             self.reservations = {}
+
+    def _register_existing_reservations(self) -> None:
+        """Register existing reservations for idempotency tracking."""
+        for reservation in self.reservations.values():
+            if reservation.status != ReservationStatus.CANCELLED.value:
+                # Generate hash if not already present
+                if reservation.idempotency_hash:
+                    self._reservation_hashes.add(reservation.idempotency_hash)
+                else:
+                    # Generate hash from existing data
+                    hash_val = generate_reservation_hash(
+                        reservation.customer_phone,
+                        reservation.datetime,
+                        reservation.party_size
+                    )
+                    self._reservation_hashes.add(hash_val)
+                    # Update the reservation with the hash
+                    reservation.idempotency_hash = hash_val
+
+        logger.info(f"Registered {len(self._reservation_hashes)} reservation hashes for idempotency")
 
     def _save_reservations(self) -> None:
         """Save reservations to file."""
@@ -251,7 +308,8 @@ class ReservationService:
         customer_phone: str,
         reservation_datetime: datetime,
         party_size: int,
-        special_requests: Optional[str] = None
+        special_requests: Optional[str] = None,
+        skip_validation: bool = False
     ) -> Tuple[bool, Optional[Reservation], Optional[str]]:
         """
         Create a new reservation.
@@ -262,6 +320,7 @@ class ReservationService:
             reservation_datetime: Desired reservation time
             party_size: Number of guests
             special_requests: Optional special requests
+            skip_validation: Skip business validation (for legacy code)
 
         Returns:
             Tuple of (success, reservation, error_message)
@@ -275,24 +334,63 @@ class ReservationService:
             logger.warning(f"Reservation conflict: {conflict_reason}")
             return False, None, conflict_reason
 
+        # Normalize inputs
+        sanitized_name, _ = sanitize_name(customer_name)
+        normalized_phone, raw_phone, phone_error = normalize_phone_to_e164(
+            customer_phone, keep_raw=True
+        )
+
+        # If phone normalization fails, use original but log warning
+        if phone_error:
+            logger.warning(f"Phone normalization warning: {phone_error}")
+            normalized_phone = customer_phone  # Fallback to original
+
+        # Sanitize notes
+        sanitized_notes, _ = sanitize_notes(special_requests)
+
+        # Generate idempotency hash
+        idempotency_hash = generate_reservation_hash(
+            normalized_phone,
+            reservation_datetime,
+            party_size
+        )
+
+        # Check for duplicates
+        if idempotency_hash in self._reservation_hashes:
+            logger.warning(f"Duplicate reservation detected: {idempotency_hash}")
+            return False, None, "Такое бронирование уже существует"
+
         # Create reservation
         reservation_id = self._generate_reservation_id()
         current_time = get_current_datetime()
 
+        # Determine if manual confirmation is needed
+        rules = self.config.booking_rules
+        requires_confirmation = party_size > rules.max_party_without_notes
+        escalation_reason = None
+        if party_size > 12:
+            escalation_reason = f"Large party of {party_size} guests requires manager approval"
+
         reservation = Reservation(
             id=reservation_id,
-            customer_name=customer_name,
-            customer_phone=customer_phone,
+            customer_name=sanitized_name,
+            customer_phone=normalized_phone,
             datetime=reservation_datetime,
             party_size=party_size,
             status=ReservationStatus.CONFIRMED.value,
-            special_requests=special_requests,
+            special_requests=sanitized_notes,
             created_at=current_time,
-            updated_at=current_time
+            updated_at=current_time,
+            phone_raw=raw_phone,
+            duration_minutes=rules.get_adjusted_duration_for_party(party_size),
+            idempotency_hash=idempotency_hash,
+            requires_confirmation=requires_confirmation,
+            escalation_reason=escalation_reason,
         )
 
         # Save reservation
         self.reservations[reservation_id] = reservation
+        self._reservation_hashes.add(idempotency_hash)
         self._save_reservations()
 
         # Log to audit
@@ -300,14 +398,114 @@ class ReservationService:
             action='create',
             reservation_id=reservation_id,
             details={
-                'customer_name': customer_name,
+                'customer_name': sanitized_name,
                 'datetime': reservation_datetime.isoformat(),
-                'party_size': party_size
+                'party_size': party_size,
+                'phone_normalized': normalized_phone,
+                'idempotency_hash': idempotency_hash,
             }
         )
 
-        logger.info(f"Created reservation {reservation_id} for {customer_name}")
+        logger.info(f"Created reservation {reservation_id} for {sanitized_name}")
         return True, reservation, None
+
+    def create_reservation_validated(
+        self,
+        customer_name: str,
+        customer_phone: str,
+        reservation_date: date,
+        reservation_time: time,
+        party_size: int,
+        special_requests: Optional[str] = None,
+        duration_minutes: Optional[int] = None
+    ) -> Tuple[bool, Optional[Reservation], ValidationResult]:
+        """
+        Create a new reservation with full business validation.
+
+        Args:
+            customer_name: Customer's name
+            customer_phone: Customer's phone number
+            reservation_date: Reservation date
+            reservation_time: Reservation time
+            party_size: Number of guests
+            special_requests: Optional special requests
+            duration_minutes: Optional duration override
+
+        Returns:
+            Tuple of (success, reservation, validation_result)
+        """
+        # Create input for validation
+        input_data = ReservationInput(
+            name=customer_name,
+            phone=customer_phone,
+            date=reservation_date,
+            time=reservation_time,
+            guests=party_size,
+            notes=special_requests,
+            duration_minutes=duration_minutes,
+        )
+
+        # Define availability check callback
+        def check_availability(dt: datetime, guests: int, duration: int) -> Tuple[bool, Optional[str]]:
+            has_conflict, reason = self._check_conflicts(dt, guests)
+            if has_conflict:
+                return False, reason
+            return True, None
+
+        # Validate with the service
+        validated, validation_result = self._validation_service.validate_and_normalize(
+            input_data,
+            check_availability_callback=check_availability
+        )
+
+        if not validated or not validation_result.is_valid:
+            error_messages = validation_result.get_error_messages()
+            logger.warning(f"Reservation validation failed: {error_messages}")
+            return False, None, validation_result
+
+        # Create the reservation
+        reservation_id = self._generate_reservation_id()
+        current_time = get_current_datetime()
+
+        reservation = Reservation(
+            id=reservation_id,
+            customer_name=validated.name,
+            customer_phone=validated.phone_normalized,
+            datetime=validated.datetime,
+            party_size=validated.guests,
+            status=ReservationStatus.CONFIRMED.value,
+            special_requests=validated.notes,
+            created_at=current_time,
+            updated_at=current_time,
+            phone_raw=validated.phone_raw,
+            duration_minutes=validated.duration_minutes,
+            idempotency_hash=validated.idempotency_hash,
+            requires_confirmation=validated.requires_manual_confirmation,
+            escalation_reason=validated.escalation_reason,
+        )
+
+        # Save reservation and register for idempotency
+        self.reservations[reservation_id] = reservation
+        self._reservation_hashes.add(validated.idempotency_hash)
+        self._validation_service.confirm_reservation(validated)
+        self._save_reservations()
+
+        # Log to audit
+        self._log_audit(
+            action='create',
+            reservation_id=reservation_id,
+            details={
+                'customer_name': validated.name,
+                'datetime': validated.datetime.isoformat(),
+                'party_size': validated.guests,
+                'phone_normalized': validated.phone_normalized,
+                'idempotency_hash': validated.idempotency_hash,
+                'validation_warnings': validation_result.get_warning_messages(),
+            }
+        )
+
+        logger.info(f"Created validated reservation {reservation_id} for {validated.name}")
+        return True, reservation, validation_result
 
     def cancel_reservation(
         self,
@@ -336,13 +534,21 @@ class ReservationService:
         reservation.status = ReservationStatus.CANCELLED.value
         reservation.updated_at = get_current_datetime()
 
+        # Remove from idempotency tracking
+        if reservation.idempotency_hash:
+            self._reservation_hashes.discard(reservation.idempotency_hash)
+            self._validation_service.cancel_reservation(reservation.idempotency_hash)
+
         self._save_reservations()
 
         # Log to audit
         self._log_audit(
             action='cancel',
             reservation_id=reservation_id,
-            details={'reason': reason or 'No reason provided'}
+            details={
+                'reason': reason or 'No reason provided',
+                'idempotency_hash': reservation.idempotency_hash,
+            }
         )
 
         logger.info(f"Cancelled reservation {reservation_id}")
